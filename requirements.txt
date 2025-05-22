@@ -10,3 +10,4 @@ scipy
 scikit-learn
 flask-cors
 opencv-python
+gdown

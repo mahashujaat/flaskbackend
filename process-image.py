@@ -12,6 +12,8 @@ from PIL import Image
 import os
 import pickle
 from model import OsteoCNN  # ✅ Import moved model class
+import gdown
+import tempfile
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["https://osteo-ai.vercel.app/:3000", "http://192.168.18.71:3000"]}})
@@ -20,11 +22,15 @@ logging.basicConfig(level=logging.DEBUG)
 from model import OsteoCNN
 
 # Force load using state_dict instead of entire model
-model_path_state_dict = "https://drive.google.com/file/d/1UwYhCWLfWkOc4i1I33-K8XCV2EUMgv2V/view?usp=drive_link"
+# Download model state_dict to a temporary file, load, then remove
+model_url = 'https://drive.google.com/uc?id=1UwYhCWLfWkOc4i1I33-K8XCV2EUMgv2V'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 kl_model = OsteoCNN(num_classes=5).to(device)
-kl_model.load_state_dict(torch.load(model_path_state_dict, map_location=device))
+with tempfile.NamedTemporaryFile(delete=False) as tmp:
+    gdown.download(model_url, tmp.name, quiet=False)
+    kl_model.load_state_dict(torch.load(tmp.name, map_location=device))
+os.remove(tmp.name)
 kl_model.eval()
 
 transform = transforms.Compose([
